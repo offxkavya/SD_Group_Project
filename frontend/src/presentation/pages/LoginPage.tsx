@@ -39,7 +39,7 @@ export default function LoginPage() {
       });
 
       setUser(user);
-      navigate("/", { replace: true });
+      navigate("/home", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -53,7 +53,6 @@ export default function LoginPage() {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${authBg})` }}
       />
-
       <div className="absolute inset-0 bg-gradient-to-r from-slate-950/70 via-slate-950/35 to-slate-950/55" />
 
       <div className="relative z-10 flex h-full w-full flex-col lg:flex-row">

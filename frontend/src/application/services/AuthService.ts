@@ -24,6 +24,11 @@ type LoginPayload = {
   password: string;
 };
 
+type ChangePasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+};
+
 export class AuthService {
   async register(formData: FormData): Promise<User> {
     const response = await apiClient.post<ApiResponse<RawUser>>(
@@ -50,5 +55,9 @@ export class AuthService {
 
   async logout(): Promise<void> {
     await apiClient.post<ApiResponse<null>>("/auth/logout", {});
+  }
+
+  async changePassword(payload: ChangePasswordPayload): Promise<void> {
+    await apiClient.post<ApiResponse<null>>("/auth/change-password", payload);
   }
 }

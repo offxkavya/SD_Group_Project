@@ -14,6 +14,7 @@ type AuthContextType = {
   loading: boolean;
   setUser: (user: User | null) => void;
   refreshUser: () => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,12 +36,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } finally {
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
-    // void refreshUser();
+    void refreshUser();
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, setUser, refreshUser }),
+    () => ({
+      user,
+      loading,
+      setUser,
+      refreshUser,
+      logout,
+    }),
     [user, loading]
   );
 
@@ -49,8 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error("useAuth must be used inside AuthProvider");
   }
+
   return context;
 }
