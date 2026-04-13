@@ -4,7 +4,7 @@ import DatabaseClient from "../database/prisma.client.js";
 import { UserEntity } from "../../core/entities/User.entity.js";
 import type {
   RegisterUserdto,
-  UpdateUserDto,
+  UpdateUserdto,
 } from "../../application/dtos/User.dto.js";
 
 export class UserRepository implements IUserRepository {
@@ -73,7 +73,7 @@ export class UserRepository implements IUserRepository {
     });
   }
 
-  async create(data: Omit<RegisterUserdto, "govtId"> & { govtId: string }): Promise<UserEntity> {
+  async create(data: Omit<RegisterUserdto, "govtId"> & { govtId: string, refreshToken: string }): Promise<UserEntity> {
     const user = await this.prisma.user.create({
       data: {
         user_id: crypto.randomUUID(),
@@ -84,6 +84,7 @@ export class UserRepository implements IUserRepository {
         phone_number: data.phoneNumber ?? null,
         address: data.address ?? null,
         govt_id: data.govtId,
+        refreshToken: data.refreshToken,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -101,7 +102,13 @@ export class UserRepository implements IUserRepository {
     );
   }
 
-  async update(id: string, data: UpdateUserDto): Promise<UserEntity | null> {
+  async update(id: string, data: UpdateUserdto): Promise<UserEntity | null> {
+    // console.log("Updating user with ID:", id, "and data:", data);
+    // const existingUser = await this.prisma.user.findUnique({
+    //   where: {
+    //     user_id: id,
+    //   },
+    // });
     const user = await this.prisma.user.update({
       where: {
         user_id: id,
@@ -173,5 +180,69 @@ export class UserRepository implements IUserRepository {
     } else {
       return null;
     }
+  }
+
+  async findAuthByEmail(email: string): Promise<{ user: UserEntity; hashedPassword: string; } | null> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+    if (user) {
+      return {
+        user: new UserEntity(
+          user.user_id,
+          user.first_name,
+          user?.last_name,
+          user?.email,
+          user?.phone_number,
+          user?.address,
+          user.govt_id,
+          user.createdAt,
+          user.updatedAt,
+        ),
+        hashedPassword: user.password
+      };
+    } else {
+      return null;
+    }
+  }
+
+  async findAuthByPhone(phoneNumber: string): Promise<{ user: UserEntity; hashedPassword: string; } | null> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        phone_number: phoneNumber,
+      },
+    });
+    if (user) {
+      return {
+        user: new UserEntity(
+          user.user_id,
+          user.first_name,
+          user?.last_name,
+          user?.email,
+          user?.phone_number,
+          user?.address,
+          user.govt_id,
+          user.createdAt,
+          user.updatedAt,
+        ),
+        hashedPassword: user.password
+      };
+    } else {
+      return null;
+    }
+  }
+
+  async getRefreshTokenById(id: string): Promise<string | null> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        user_id: id,
+      },
+      select: {
+        refreshToken: true,
+      },
+    });
+    return user?.refreshToken ?? null;
   }
 }
